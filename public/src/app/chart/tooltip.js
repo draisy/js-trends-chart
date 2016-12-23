@@ -51,8 +51,7 @@ export default function floatingTooltip(tooltipId, width) {
       tttop = curY + yOffset;
     }
 
-    tt
-      .style('top', tttop + 'px')
+    tt.style('top', tttop + 'px')
       .style('left', ttleft + 'px');
   }
 

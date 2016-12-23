@@ -3,8 +3,8 @@ import { getData } from '../data/data';
 import tt from './tooltip'
 
 function bubbleChart() {
-    const width = 940,
-        height = 600,
+    const width = 550,
+        height = 550,
         center = { // location to move bubbles to
             x: width / 2,
             y: height / 2
@@ -12,8 +12,8 @@ function bubbleChart() {
         forceStrength = 0.35,
         colors = ['low', 'medium', 'high'];
 
-    let bubbles = null,
-        svg = null,
+    let bubbles,
+        svg,
         simulation,
         fillColor,
         radiusScale,
@@ -22,8 +22,9 @@ function bubbleChart() {
    // console.log('tooltip', tooltip);
     const tooltip = tt('tooltip', 240);
 
-    // charge is proportional to diameter of circle, this is for accurate collision detection between nodes of diff sizes. Charge is negative so that nodes will repel.
-    // Review if scale factor or 8 should be reduced, gets called as part of manybody force
+    // charge is proportional to diameter of circle
+    // this is for accurate collision detection between nodes of diff sizes. 
+    // Charge is negative so that nodes will repel.
     function charge(d) {
         return -Math.pow(d.radius, 2.0) * forceStrength;
     }
@@ -40,10 +41,7 @@ function bubbleChart() {
 
     fillColor = d3.scaleOrdinal()
         .domain(colors)
-        // .range(['#d84b2a', '#beccae', '#7aa25c']);
-        // .range(['#7C7287', '#9DC0Bc', '#97B9A1']);
          .range(['#00796B', '#009688', '#9E9E9E']);
-        //.range(['#956C7B', '#E2BAC9', '#7FA6AF']);
 
     function createNodes(data) {
         const maxAmount = d3.max(data, (d) => Number(d.count));
@@ -58,7 +56,6 @@ function bubbleChart() {
                 radius: radiusScale(Number(d.count)),
                 name: d.tagName,
                 count: d.count,
-                link: d.link,
                 x: Math.random() * 900,
                 y: Math.random() * 800
             };
@@ -83,8 +80,10 @@ function bubbleChart() {
             .classed('bubble', true)
             .attr('r', 0)
             .attr('fill', (d) => fillColor(Math.floor(Math.random() * colors.length)))
-            .attr('stroke', (d) => d3.rgb(fillColor(Math.floor(Math.random() * colors.length))).darker()) // do we need anon function call here?
-            .attr('strokeWidth', 2)
+            .attr('stroke', function (d) {
+                return d3.rgb(this.attributes.fill.value).darker();
+            }) 
+            .attr('stroke-width', 2)
             .on('mouseover', showDetail)
             .on('mouseout', hideDetail);
 
@@ -104,7 +103,7 @@ function bubbleChart() {
     }
 
     function groupBubbles() {
-        // @v4 Reset the 'x' force to draw the bubbles to the center.
+        // Reset the 'x' force to draw the bubbles to the center.
         simulation.force('x', d3.forceX().strength(forceStrength).x(center.x));
         simulation.alpha(1).restart();
     }
@@ -118,8 +117,9 @@ function bubbleChart() {
 
     function hideDetail(d) {
         d3.select(this)
-            .attr('stroke', d3.rgb(fillColor(Math.floor(Math.random() * colors.length))).darker())
-
+            .attr('stroke', function (d) {
+                 return d3.rgb(this.attributes.fill.value).darker();
+            });
         tooltip.hideTooltip();
     }
 

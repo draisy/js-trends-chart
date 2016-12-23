@@ -3,27 +3,30 @@ import { getData } from '../data/data';
 import tt from './tooltip'
 
 function bubbleChart() {
-    const width = 940,
-        height = 600,
+    const width = 550,
+        height = 550,
         center = { // location to move bubbles to
             x: width / 2,
             y: height / 2
         },
         forceStrength = 0.35,
-        colors = ['low', 'medium', 'high'];
+        colors = ['low', 'medium', 'high'],
+        colorVals = ['#00796B', '#009688', '#9E9E9E'];
 
-    let bubbles = null,
-        svg = null,
+    let bubbles,
+        canvas,
+        context,
         simulation,
         fillColor,
         radiusScale,
         chart,
-        nodes;
-   // console.log('tooltip', tooltip);
+        nodes,
+        tickGrowth = 40;
     const tooltip = tt('tooltip', 240);
 
-    // charge is proportional to diameter of circle, this is for accurate collision detection between nodes of diff sizes. Charge is negative so that nodes will repel.
-    // Review if scale factor or 8 should be reduced, gets called as part of manybody force
+    // charge is proportional to diameter of circle
+    // this is for accurate collision detection between nodes of diff sizes. 
+    // Charge is negative so that nodes will repel.
     function charge(d) {
         return -Math.pow(d.radius, 2.0) * forceStrength;
     }
@@ -40,10 +43,7 @@ function bubbleChart() {
 
     fillColor = d3.scaleOrdinal()
         .domain(colors)
-        // .range(['#d84b2a', '#beccae', '#7aa25c']);
-        // .range(['#7C7287', '#9DC0Bc', '#97B9A1']);
-         .range(['#00796B', '#009688', '#9E9E9E']);
-        //.range(['#956C7B', '#E2BAC9', '#7FA6AF']);
+        .range(['#00796B', '#009688', '#9E9E9E']);
 
     function createNodes(data) {
         const maxAmount = d3.max(data, (d) => Number(d.count));
@@ -57,8 +57,8 @@ function bubbleChart() {
             return {
                 radius: radiusScale(Number(d.count)),
                 name: d.tagName,
+                fillColor: colorVals[Math.floor(Math.random() * colorVals.length)],
                 count: d.count,
-                link: d.link,
                 x: Math.random() * 900,
                 y: Math.random() * 800
             };
@@ -71,42 +71,43 @@ function bubbleChart() {
     chart = function (selector, data) {
         nodes = createNodes(data);
 
-        svg = d3.select(selector)
-            .append('svg')
+        canvas = d3.select(selector)
+            .append('canvas')
             .attr('width', width)
             .attr('height', height);
 
-        bubbles = svg.selectAll('.bubble')
-            .data(nodes); 
-
-        const bubblesE = bubbles.enter().append('circle')
-            .classed('bubble', true)
-            .attr('r', 0)
-            .attr('fill', (d) => fillColor(Math.floor(Math.random() * colors.length)))
-            .attr('stroke', (d) => d3.rgb(fillColor(Math.floor(Math.random() * colors.length))).darker()) // do we need anon function call here?
-            .attr('strokeWidth', 2)
-            .on('mouseover', showDetail)
-            .on('mouseout', hideDetail);
-
-        bubbles = bubbles.merge(bubblesE);
-        bubbles.transition()
-            .duration(2000)
-            .attr('r', (d) => d.radius);
-
+        context = canvas.node().getContext('2d');
         simulation.nodes(nodes);
-
         groupBubbles();
     };
 
     function ticked() {
-        bubbles.attr('cx', (d) => d.x)
-            .attr('cy', (d) => d.y);
+        let radius;
+        context.clearRect(0, 0, width, height);
+        nodes.forEach((d, i) => {
+            if (tickGrowth > 0) {
+                radius = ((d.radius / tickGrowth) / d.radius) * d.radius;
+            } else {
+                radius = d.radius;
+            }
+            context.beginPath();
+            context.moveTo(d.x + radius, d.y);
+            context.arc(d.x, d.y, radius, 0, 2 * Math.PI);
+            context.fillStyle = d.fillColor;
+            context.fill();
+            context.strokeStyle = d3.rgb(d.fillColor).darker()
+            context.lineWidth = 2;
+            context.stroke();
+            context.closePath();
+        });
+        tickGrowth -= 1;
     }
 
     function groupBubbles() {
-        // @v4 Reset the 'x' force to draw the bubbles to the center.
+        // Reset the 'x' force to draw the bubbles to the center.
         simulation.force('x', d3.forceX().strength(forceStrength).x(center.x));
         simulation.alpha(1).restart();
+        console.time('test');
     }
 
     function showDetail(d) {
@@ -123,7 +124,7 @@ function bubbleChart() {
         tooltip.hideTooltip();
     }
 
-    return chart; 
+    return chart;
 }
 
 const chart = bubbleChart();

@@ -22,7 +22,6 @@ function getData() {
                         tagsData[tag].count = 1;
                         tagsData[tag].tagName = tag;
                     } else {
-                        console.log('tag is', tag, 'count is: ', tagsData[tag].count);
                         tagsData[tag].count += 1;
                     }
                 })
