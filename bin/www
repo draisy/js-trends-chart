@@ -1,11 +1,12 @@
 #!/usr/bin/env node
+/* eslint-disable */
 
 /**
  * Module dependencies.
  */
 
 var app = require('../app');
-var debug = require('debug')('jschart:server');
+var debug = require('debug')('js-trends-chart:server');
 var http = require('http');
 
 /**

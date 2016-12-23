@@ -11,7 +11,7 @@ module.exports = {
         "indent": ["error", 4, { "SwitchCase": 1 }],
         "linebreak-style": ["error", "windows"],
         "no-console": "off",
-        "one-var": "always",
+        "one-var": ["error", "always"],
         "no-plusplus": ["error", { "allowForLoopAfterthoughts": true }],
         "no-param-reassign": ["error", { "props": false }],
         "no-unused-expressions": ["error", { "allowShortCircuit": true }],
